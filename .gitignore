@@ -1,0 +1,124 @@
+# =======================================================
+# Global Ignores (Applies to the entire CARCOST project)
+# =======================================================
+
+# Editor/IDE specific files
+.idea/                          # PyCharm/IntelliJ IDEA project files
+.vscode/                        # VS Code specific settings
+!.vscode/extensions.json        # Keep extensions.json if you want to recommend extensions
+*.iml                           # IntelliJ IDEA module files
+.DS_Store                       # macOS specific desktop services store
+*.suo                           # Visual Studio Solution User Options
+*.ntvs* # Node.js Tools for Visual Studio
+*.njsproj                       # Node.js project files for Visual Studio
+*.sln                           # Visual Studio Solution files
+*.sw?                           # Vim swap files (often at root or any dir)
+.project
+.settings/
+.cache/
+
+# General logs
+*.log                           # General log files (catch-all at root)
+npm-debug.log* # npm debug logs
+yarn-debug.log* # Yarn debug logs
+yarn-error.log* # Yarn error logs
+pnpm-debug.log* # pnpm debug logs
+lerna-debug.log* # Lerna debug logs
+
+# Build/temp directories that might appear at root
+build/
+dist/
+.temp/                          # Misc temp files
+.cache/                         # Misc cache files
+
+# Sensitive information (VERY IMPORTANT!)
+.env                            # Generic .env file at root
+*.env                           # Any file ending with .env at root
+
+# =======================================================
+# Backend specific ignores (CARCOST/backend/)
+# =======================================================
+
+# Byte-compiled / optimized / DLL files
+backend/**/__pycache__/         # __pycache__ in backend and its subdirs
+backend/*.py[cod]
+backend/*.so
+
+# C extensions
+backend/*.so
+
+# Distribution / packaging
+backend/.Python
+backend/env/                    # Matches 'env/' inside backend
+backend/develop-eggs/
+backend/dist/
+backend/eggs/
+backend/lib/
+backend/lib64/
+backend/parts/
+backend/sdist/
+backend/var/
+backend/*.egg-info/
+backend/.installed.cfg
+backend/*.egg
+backend/.eggs/
+
+# Installer logs
+backend/pip-log.txt
+backend/pip-delete-this-directory.txt
+
+# Virtual environment
+# This is crucial! Your virtual environment is inside 'backend/venv/'
+backend/venv/
+backend/.venv/                  # Covers .venv if named differently
+backend/env/                    # Explicitly covers 'env' as a virtual env name inside backend
+
+# Database
+# This is your development SQLite database. It's at the project root.
+db.sqlite3
+
+# Media files
+# User-uploaded files. These are usually stored on cloud storage in production.
+backend/media/
+
+# Static files (collected)
+# If you run `python manage.py collectstatic`, the collected static files
+# go into a `staticfiles` or similar directory. This should be generated on deploy.
+backend/staticfiles/
+
+# Development specific files for backend
+backend/.coverage
+backend/.pytest_cache/
+backend/htmlcov/
+backend/*.pot # Portable Object Template files (for translations)
+backend/*.swp # Vim swap files in backend
+backend/*.bak # Backup files in backend
+backend/*.orig # Original files in backend
+
+# Sensitive information (backend specific)
+backend/local_settings.py
+
+# =======================================================
+# Frontend specific ignores (CARCOST/frontend/)
+# =======================================================
+
+# Node modules - installed packages
+frontend/node_modules/
+
+# Vite build output directory
+frontend/dist/
+frontend/build/
+frontend/dist-ssr/ # Specific to SSR builds (from the smaller frontend .gitignore)
+
+# Test coverage reports
+frontend/coverage/
+
+# Specific to Vite cache
+.vite/ # Vite's internal cache/temp directory (usually project root relative)
+
+# Local configuration files that override others
+*.local # From the smaller frontend .gitignore (e.g., .env.local)
+
+# Other specific frontend logs
+frontend/logs/ # If you have a 'logs' directory inside frontend
+frontend/*.log # Already covered by global *.log, but good to be explicit for frontend
