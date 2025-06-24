@@ -1,9 +1,7 @@
-// import { } from "../components/UploadButton";
+import UploadButton from "../components/UploadButton";
 
 function ReceiptUpload() {
-    return (
-        <h1>Hello World</h1>
-    );
+  return <UploadButton />;
 }
 
 export default ReceiptUpload;
