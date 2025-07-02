@@ -1,7 +1,8 @@
 from fastapi import APIRouter, Depends, status, HTTPException
 from app.schemas import response_schemas, request_schemas
 from app.api import deps
-from app.models import user, cars
+from app.models.cars import Car
+from app.models.user import User
 from sqlalchemy.orm import Session
 from typing import List
 from sqlalchemy import desc
@@ -9,8 +10,8 @@ from sqlalchemy import desc
 router = APIRouter()
 
 @router.post("", response_model=response_schemas.CarSchema)
-def add_car(new_car_details: request_schemas.CreateCar, current_user: user.User = Depends(deps.get_current_user), db: Session = Depends(deps.get_db)):
-    new_car = cars.Car(
+def add_car(new_car_details: request_schemas.CreateCar, current_user: User = Depends(deps.get_current_user), db: Session = Depends(deps.get_db)):
+    new_car = Car(
         user_id=current_user.id,
         name=new_car_details.name,
         make=new_car_details.make,
@@ -24,7 +25,7 @@ def add_car(new_car_details: request_schemas.CreateCar, current_user: user.User 
     )
 
     if (new_car_details.isDefault):
-        db.query(cars.Car).filter(cars.Car.user_id == current_user.id, cars.Car.is_default == True).update({"is_default": False})
+        db.query(Car).filter(Car.user_id == current_user.id, Car.is_default == True).update({"is_default": False})
 
 
     db.add(new_car)
@@ -36,16 +37,16 @@ def add_car(new_car_details: request_schemas.CreateCar, current_user: user.User 
     return car_model
 
 @router.get("", response_model=List[response_schemas.CarSchema])
-def get_all_cars(current_user: user.User = Depends(deps.get_current_user), db: Session = Depends(deps.get_db)):
-    cars_for_user = db.query(cars.Car).filter(cars.Car.user_id == current_user.id).order_by(desc(cars.Car.is_default), desc(cars.Car.updated_at)).all()
+def get_all_cars(current_user: User = Depends(deps.get_current_user), db: Session = Depends(deps.get_db)):
+    cars_for_user = db.query(Car).filter(Car.user_id == current_user.id).order_by(desc(Car.is_default), desc(Car.updated_at)).all()
     return [response_schemas.CarSchema.model_validate(car) for car in cars_for_user]
 
 @router.delete("/{car_id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_car(car_id: str, current_user: user.User = Depends(deps.get_current_user), db: Session = Depends(deps.get_db)):
+def delete_car(car_id: str, current_user: User = Depends(deps.get_current_user), db: Session = Depends(deps.get_db)):
     # TODO: Delete all assocaited objects (delete recieipts)
-    car_to_delete = db.query(cars.Car).filter(
-        cars.Car.id == car_id,
-        cars.Car.user_id == current_user.id
+    car_to_delete = db.query(Car).filter(
+        Car.id == car_id,
+        Car.user_id == current_user.id
     ).first()
 
     if not car_to_delete:
@@ -60,12 +61,12 @@ def delete_car(car_id: str, current_user: user.User = Depends(deps.get_current_u
     return
 
 @router.post("/{car_id}/set-default", response_model=response_schemas.CarSchema)
-def set_car_as_default(car_id: str, current_user: user.User = Depends(deps.get_current_user), db: Session = Depends(deps.get_db)):
-    db.query(cars.Car).filter(cars.Car.user_id == current_user.id, cars.Car.is_default == True).update({"is_default": False})
+def set_car_as_default(car_id: str, current_user: User = Depends(deps.get_current_user), db: Session = Depends(deps.get_db)):
+    db.query(Car).filter(Car.user_id == current_user.id, Car.is_default == True).update({"is_default": False})
 
-    car_to_set_as_default = db.query(cars.Car).filter(
-        cars.Car.id == car_id,
-        cars.Car.user_id == current_user.id
+    car_to_set_as_default = db.query(Car).filter(
+        Car.id == car_id,
+        Car.user_id == current_user.id
     ).first()
 
     if not car_to_set_as_default:
@@ -84,10 +85,10 @@ def set_car_as_default(car_id: str, current_user: user.User = Depends(deps.get_c
     return car_model
 
 @router.put("/{car_id}", response_model=response_schemas.CarSchema)
-def update_car(new_car_details: request_schemas.UpdateCar, car_id: str, current_user: user.User = Depends(deps.get_current_user), db: Session = Depends(deps.get_db)):
-    car_to_update = db.query(cars.Car).filter(
-        cars.Car.id == car_id,
-        cars.Car.user_id == current_user.id
+def update_car(new_car_details: request_schemas.UpdateCar, car_id: str, current_user: User = Depends(deps.get_current_user), db: Session = Depends(deps.get_db)):
+    car_to_update = db.query(Car).filter(
+        Car.id == car_id,
+        Car.user_id == current_user.id
     ).first()
 
     if not car_to_update:
