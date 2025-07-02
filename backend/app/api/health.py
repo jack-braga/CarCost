@@ -1,7 +1,7 @@
 from fastapi import APIRouter
 from datetime import datetime, timezone
 
-router = APIRouter()
+router = APIRouter(prefix="/api/health", tags=["health"])
 
 @router.get("/health")
 def health_check():

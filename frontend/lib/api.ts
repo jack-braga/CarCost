@@ -47,6 +47,10 @@ class ApiClient {
         throw new Error(errorData.detail || `HTTP error! status: ${response.status}`)
       }
 
+      if (response.status === 204) {
+        return {} as T;
+      }
+
       return await response.json()
     } catch (error) {
       console.error(`API request failed: ${endpoint}`, error)

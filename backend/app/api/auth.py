@@ -1,9 +1,10 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
-from app.models import schemas, user
+from app.models import user
 from app.api import deps
 from passlib.context import CryptContext
 from app.core import security
+from app.schemas import response_schemas, request_schemas
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
@@ -16,8 +17,8 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
 
 router = APIRouter()
 
-@router.post("/register", response_model=schemas.AuthResponse)
-def register(credentials: schemas.RegisterCredentials, db: Session = Depends(deps.get_db)):
+@router.post("/register", response_model=response_schemas.AuthResponse)
+def register(credentials: request_schemas.RegisterCredentials, db: Session = Depends(deps.get_db)):
     existing_user = db.query(user.User).filter(user.User.email == credentials.email).first()
     if existing_user:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Email already registered")
@@ -37,16 +38,16 @@ def register(credentials: schemas.RegisterCredentials, db: Session = Depends(dep
 
     access_token = security.create_access_token(data={"sub": new_user.email})
 
-    user_model = schemas.UserSchema.model_validate(new_user)
+    user_model = response_schemas.UserSchema.model_validate(new_user)
 
-    return schemas.AuthResponse(
+    return response_schemas.AuthResponse(
         access_token=access_token,
         token_type="bearer",
         user=user_model
     )
 
-@router.post("/login", response_model=schemas.AuthResponse)
-def login(credentials: schemas.LoginCredentials, db: Session = Depends(deps.get_db)):
+@router.post("/login", response_model=response_schemas.AuthResponse)
+def login(credentials: request_schemas.LoginCredentials, db: Session = Depends(deps.get_db)):
     # Find the user by email
     user_in_db = db.query(user.User).filter(user.User.email == credentials.email).first()
     if not user_in_db:
@@ -58,14 +59,14 @@ def login(credentials: schemas.LoginCredentials, db: Session = Depends(deps.get_
     
     access_token = security.create_access_token(data={"sub": user_in_db.email})
 
-    user_model = schemas.UserSchema.model_validate(user_in_db)
+    user_model = response_schemas.UserSchema.model_validate(user_in_db)
 
-    return schemas.AuthResponse(
+    return response_schemas.AuthResponse(
         access_token=access_token,
         token_type="bearer",
         user=user_model
     )
 
-@router.get("/me", response_model=schemas.UserSchema)
+@router.get("/me", response_model=response_schemas.UserSchema)
 def get_me(current_user: user.User = Depends(deps.get_current_user)):
     return current_user
