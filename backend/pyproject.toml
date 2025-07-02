@@ -1,0 +1,10 @@
+[project]
+name = "backend"
+version = "0.1.0"
+description = "Track the cost of your cars with this OCR-powered FastAPI backend"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "easyocr>=1.7.2",
+    "fastapi[standard]>=0.115.14",
+]

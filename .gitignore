@@ -1,124 +1,96 @@
 # =======================================================
-# Global Ignores (Applies to the entire CARCOST project)
+# Global Ignores
 # =======================================================
 
-# Editor/IDE specific files
-.idea/
+# =======================================================
+# Backend specific ignores
+# =======================================================
+
+# Ignore Python cache files anywhere
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Ignore virtual environment folders commonly created
+venv/
+env/
+.env/
+
+# Ignore IDE/editor configs (optional, but common)
 .vscode/
-!.vscode/extensions.json
-*.iml
-.DS_Store
-*.suo
-*.ntvs*
-*.njsproj
-*.sln
-*.sw?
-.project
-.settings/
-.cache/
+.idea/
 
-# General logs
-*.log
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-pnpm-debug.log*
-lerna-debug.log*
-
-# Build/temp directories that might appear at root
-build/
-dist/
-.temp/
-.cache/
-
-# Sensitive information (VERY IMPORTANT!)
-.env
-*.env
-
-# =======================================================
-# Backend specific ignores (CARCOST/backend/)
-# =======================================================
-
-# Byte-compiled / optimized / DLL files
-backend/**/__pycache__/
+# Ignore backend dependencies and build artifacts inside backend/
+backend/__pycache__/
 backend/*.py[cod]
-backend/*.so
-
-# C extensions
-backend/*.so
-
-# Distribution / packaging
-backend/.Python
-backend/env/
-backend/develop-eggs/
-backend/dist/
-backend/eggs/
-backend/lib/
-backend/lib64/
-backend/parts/
-backend/sdist/
-backend/var/
-backend/*.egg-info/
-backend/.installed.cfg
-backend/*.egg
-backend/.eggs/
-
-# Installer logs
-backend/pip-log.txt
-backend/pip-delete-this-directory.txt
-
-# Virtual environment
-# This is crucial! Your virtual environment is inside 'backend/venv/'
-backend/venv/
+backend/.mypy_cache/
+backend/.pytest_cache/
 backend/.venv/
 backend/env/
+backend/venv/
+backend/.env
+backend/__pypackages__/
 
-# Database
-# This is your development SQLite database. It's at the project root.
-db.sqlite3
+# Ignore database files (if any)
+backend/*.sqlite3
+backend/*.db
 
-# Media files
-# User-uploaded files. These are usually stored on cloud storage in production.
-backend/media/
+# Ignore logs
+*.log
+backend/logs/
+logs/
 
-# Static files (collected)
-# If you run `python manage.py collectstatic`, the collected static files
-# go into a `staticfiles` or similar directory. This should be generated on deploy.
-backend/staticfiles/
-
-# Development specific files for backend
+# Ignore coverage reports
+htmlcov/
+.coverage
 backend/.coverage
-backend/.pytest_cache/
-backend/htmlcov/
-backend/*.pot
-backend/*.swp
-backend/*.bak
-backend/*.orig
 
-# Sensitive information (backend specific)
-backend/local_settings.py
+# Ignore system files
+.DS_Store
+Thumbs.db
+
+# Ignore Python egg info and dist
+*.egg-info/
+dist/
+build/
+
+# Ignore pip cache folder
+pip-wheel-metadata/
+
+# Ignore mypy cache
+.mypy_cache/
+
+# Ignore pytest cache
+.pytest_cache/
 
 # =======================================================
-# Frontend specific ignores (CARCOST/frontend/)
+# Frontend specific ignores
 # =======================================================
 
-# Node modules - installed packages
-frontend/node_modules/
+# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
-# Vite build output directory
-frontend/dist/
-frontend/build/
-frontend/dist-ssr/
+# dependencies
+frontend/node_modules
 
-# Test coverage reports
-frontend/coverage/
+# next.js
+frontend/.next/
+frontend/out/
 
-# Specific to Vite cache
-.vite/
+# production
+frontend/build
 
-# Local configuration files that override others
-*.local
+# debug
+frontend/npm-debug.log*
+frontend/yarn-debug.log*
+frontend/yarn-error.log*
+frontend/.pnpm-debug.log*
 
-# Other specific frontend logs
-frontend/logs/
-frontend/*.log
+# env files
+frontend/.env*
+
+# vercel
+frontend/.vercel
+
+# typescript
+frontend/*.tsbuildinfo
+frontend/next-env.d.ts
