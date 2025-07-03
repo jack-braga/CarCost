@@ -1,6 +1,6 @@
 from fastapi import FastAPI, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
-from app.api import auth, health, cars
+from app.api import auth, health, cars, fuel_receipts
 # import easyocr
 # import shutil
 # import os
@@ -18,7 +18,8 @@ app.add_middleware(
 
 app.include_router(auth.router, prefix="/api/auth", tags=["auth"])
 app.include_router(cars.router, prefix="/api/cars", tags=["cars"])
-app.include_router(health.router)
+app.include_router(fuel_receipts.router, prefix="/api/fuel-receipts", tags=["fuel-receipts"])
+app.include_router(health.router, prefix="/api/health", tags=["health"])
 
 # @app.post("/ocr")
 # async def perform_ocr(file: UploadFile = File(...)):

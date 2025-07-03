@@ -1,7 +1,7 @@
 from pydantic import BaseModel, EmailStr, Field
 from typing import Optional
-from datetime import datetime
-from app.models.cars import FuelType
+import datetime
+from app.models.car import FuelType
 
 class RegisterCredentials(BaseModel):
     email: EmailStr
@@ -21,7 +21,7 @@ class CreateCar(BaseModel):
     color: Optional[str] = None
     licensePlate: Optional[str] = None
     fuelType: FuelType
-    tankCapacity: Optional[int] = None
+    tankCapacity: Optional[float] = None
     isDefault: Optional[bool] = None
 
 class UpdateCar(BaseModel):
@@ -32,8 +32,29 @@ class UpdateCar(BaseModel):
     color: Optional[str] = None
     licensePlate: Optional[str] = Field(default=None, alias="license_plate")
     fuelType: Optional[FuelType] = Field(default=None, alias="fuel_type")
-    tankCapacity: Optional[int] = Field(default=None, alias="tank_capacity")
+    tankCapacity: Optional[float] = Field(default=None, alias="tank_capacity")
     isDefault: Optional[bool] = Field(default=None, alias="is_default")
+
+    model_config = {
+        "populate_by_name": True,
+        "from_attributes": True
+    }
+
+class CreateFuelReceipt(BaseModel):
+    date: datetime.date
+    amountPaid: float
+    volumePurchased: float
+    advertisedPrice: float
+    odometer: float
+    carId: str
+
+class UpdateFuelReceipt(BaseModel):
+    date: Optional[datetime.date] = None
+    amountPaid: Optional[float] = Field(default=None, alias="amount_paid")
+    volumePurchased: Optional[float] = Field(default=None, alias="volume_purchased")
+    advertisedPrice: Optional[float] = Field(default=None, alias="advertised_price")
+    odometer: Optional[float] = None
+    carId: Optional[str] = Field(default=None, alias="car_id")
 
     model_config = {
         "populate_by_name": True,

@@ -1,8 +1,9 @@
 export interface FuelReceipt {
   id: string
   date: string // ISO date string
-  amount: number
-  vendor: string
+  amountPaid: number
+  volumePurchased: number
+  advertisedPrice: number
   odometer: number
   imageUrl?: string
   userId: string // Add user association
@@ -13,8 +14,9 @@ export interface FuelReceipt {
 
 export interface OCRResult {
   date?: string
-  amount?: number
-  vendor?: string
+  amountPaid?: number
+  volumePurchased?: number
+  advertisedPrice?: number
   odometer?: number
   confidence: number
   rawText?: string // Full OCR extracted text

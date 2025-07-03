@@ -1,6 +1,6 @@
 import enum
 
-from sqlalchemy import Column, ForeignKey, String, Integer, Boolean, DateTime, Enum
+from sqlalchemy import Column, ForeignKey, String, Integer, Numeric, Boolean, DateTime, Enum
 from sqlalchemy.sql import func
 import uuid
 from app.db.base_class import Base
@@ -24,7 +24,7 @@ class Car(Base):
     color = Column(String, nullable=True)
     license_plate = Column(String, nullable=True)
     fuel_type = Column(Enum(FuelType, name="fuel_type_enum"), nullable=False, default=FuelType.petrol)
-    tank_capacity = Column(Integer, nullable=True)
+    tank_capacity = Column(Numeric, nullable=True)
     is_default = Column(Boolean, nullable=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())

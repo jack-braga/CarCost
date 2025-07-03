@@ -1,8 +1,8 @@
 from pydantic import BaseModel, EmailStr, Field
 from typing import Optional
-from datetime import datetime
+from datetime import datetime, date
 
-from app.models.cars import FuelType
+from app.models.car import FuelType
 
 class UserSchema(BaseModel):
     id: str
@@ -35,8 +35,25 @@ class CarSchema(BaseModel):
     color: Optional[str] = None
     license_plate: Optional[str] = Field(None, alias="licensePlate")
     fuel_type: FuelType = Field(..., alias="fuelType")
-    tank_capacity: Optional[int] = Field(None, alias="tankCapacity")
+    tank_capacity: Optional[float] = Field(None, alias="tankCapacity")
     is_default: bool = Field(None, alias="isDefault")
+    created_at: datetime = Field(..., alias="createdAt")
+    updated_at: datetime = Field(..., alias="updatedAt")
+
+    model_config = {
+        "from_attributes": True,
+        "populate_by_name": True,  # allow population via aliases
+    }
+
+class FuelReceiptSchema(BaseModel):
+    id: str
+    date: date
+    amount_paid: float = Field(..., alias="amountPaid")
+    volume_purchased: float = Field(..., alias="volumePurchased")
+    advertised_price: float = Field(..., alias="advertisedPrice")
+    odometer: float
+    user_id: str = Field(..., alias="userId")
+    car_id: str = Field(..., alias="carId")
     created_at: datetime = Field(..., alias="createdAt")
     updated_at: datetime = Field(..., alias="updatedAt")
 

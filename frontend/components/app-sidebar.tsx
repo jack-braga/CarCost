@@ -80,16 +80,16 @@ export function AppSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
-      <SidebarFooter className="p-4">
+      <SidebarFooter className="p-2">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="w-full justify-start">
+            <Button variant="ghost" className="w-full px-2 justify-start">
               <User className="mr-2 h-4 w-4" />
-              <div className="flex flex-col items-start">
-                <span className="text-sm font-medium">
+              <div className="flex flex-col items-start overflow-hidden">
+                <span className="text-sm text-start font-medium truncate w-full">
                   {user?.firstName} {user?.lastName}
                 </span>
-                <span className="text-xs text-muted-foreground">{user?.email}</span>
+                <span className="text-xs text-muted-foreground truncate w-full">{user?.email}</span>
               </div>
             </Button>
           </DropdownMenuTrigger>

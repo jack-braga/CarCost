@@ -33,8 +33,9 @@ export function ExportDialog({ receipts, cars }: ExportDialogProps) {
   })
   const [includeFields, setIncludeFields] = useState({
     date: true,
-    vendor: true,
-    amount: true,
+    amountPaid: true,
+    volumePurchased: true,
+    advertisedPrice: true,
     odometer: true,
     carInfo: true,
     fuelType: true,
@@ -67,8 +68,10 @@ export function ExportDialog({ receipts, cars }: ExportDialogProps) {
       const data: any = {}
 
       if (includeFields.date) data.Date = new Date(receipt.date).toLocaleDateString()
-      if (includeFields.vendor) data.Vendor = receipt.vendor
-      if (includeFields.amount) data.Amount = receipt.amount
+      // if (includeFields.vendor) data.Vendor = receipt.vendor
+      if (includeFields.amountPaid) data["Amount Paid"] = receipt.amountPaid;
+      if (includeFields.volumePurchased) data["Volume Purchased"] = receipt.volumePurchased;
+      if (includeFields.advertisedPrice) data["Advertised Price"] = receipt.advertisedPrice;
       if (includeFields.odometer) data.Odometer = receipt.odometer
       if (includeFields.carInfo && car) {
         data["Car Name"] = car.name
@@ -135,9 +138,9 @@ export function ExportDialog({ receipts, cars }: ExportDialogProps) {
           dateRange:
             dateRange.start || dateRange.end
               ? {
-                  start: dateRange.start || null,
-                  end: dateRange.end || null,
-                }
+                start: dateRange.start || null,
+                end: dateRange.end || null,
+              }
               : null,
         },
         data,
@@ -261,9 +264,7 @@ export function ExportDialog({ receipts, cars }: ExportDialogProps) {
                   <Label htmlFor={field} className="text-sm">
                     {field === "carInfo"
                       ? "Car Details"
-                      : field === "fuelType"
-                        ? "Fuel Type"
-                        : field.charAt(0).toUpperCase() + field.slice(1)}
+                      : field.charAt(0).toUpperCase() + field.slice(1).replace(/(?!^)([A-Z])/g, ' $1')}
                   </Label>
                 </div>
               ))}

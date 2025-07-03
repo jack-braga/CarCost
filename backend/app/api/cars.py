@@ -1,8 +1,9 @@
 from fastapi import APIRouter, Depends, status, HTTPException
 from app.schemas import response_schemas, request_schemas
 from app.api import deps
-from app.models.cars import Car
+from app.models.car import Car
 from app.models.user import User
+from app.models.fuel_receipt import FuelReceipt
 from sqlalchemy.orm import Session
 from typing import List
 from sqlalchemy import desc
@@ -43,7 +44,6 @@ def get_all_cars(current_user: User = Depends(deps.get_current_user), db: Sessio
 
 @router.delete("/{car_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_car(car_id: str, current_user: User = Depends(deps.get_current_user), db: Session = Depends(deps.get_db)):
-    # TODO: Delete all assocaited objects (delete recieipts)
     car_to_delete = db.query(Car).filter(
         Car.id == car_id,
         Car.user_id == current_user.id
@@ -54,6 +54,8 @@ def delete_car(car_id: str, current_user: User = Depends(deps.get_current_user),
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Car not found or you don't have permission to delete it."
         )
+    
+    db.query(FuelReceipt).filter(FuelReceipt.user_id == current_user.id, FuelReceipt.car_id == car_id).delete()
 
     db.delete(car_to_delete)
     db.commit()

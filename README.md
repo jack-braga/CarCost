@@ -1,5 +1,18 @@
 # CarCost
 
+## TODO:
+- Force Odometer to be higher than last receipt
+- OCR
+- LLM
+- Allow receipt images to be uploaded and saved
+- Exact Fuel Type (E10 vs 98 vs 91 etc.)
+- Localisation (volumes, distance, currency & language)
+- Customizable dashboard
+- Vendor
+- Optional Odometer
+- electric Charges
+- Dockerize entire app
+
 ## Start up Frontend
 
 - `npm install`

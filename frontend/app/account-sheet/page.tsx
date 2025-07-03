@@ -14,12 +14,16 @@ import { useToast } from "@/hooks/use-toast"
 import { AuthenticatedLayout } from "@/components/authenticated-layout"
 import { ExportDialog } from "@/components/export-dialog"
 import { CarSelector } from "@/components/car-selector"
+import { ReceiptForm } from "@/components/receipt-form"
+import { FuelReceipt } from "@/lib/types"
 
 export default function AccountSheetPage() {
   const [searchTerm, setSearchTerm] = useState("")
   const { toast } = useToast()
   const queryClient = useQueryClient()
   const [selectedCarId, setSelectedCarId] = useState<string | null>(null)
+  const [showForm, setShowForm] = useState(false);
+  const [receiptOnFocus, setReceiptOnFocus] = useState<FuelReceipt | null>(null);
 
   // Fetch user's cars
   const { data: cars = [] } = useQuery({
@@ -52,16 +56,18 @@ export default function AccountSheetPage() {
 
   const filteredReceipts = receipts.filter((receipt) => {
     const matchesSearch =
-      receipt.vendor.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      // receipt.vendor.toLowerCase().includes(searchTerm.toLowerCase()) ||
       receipt.date.includes(searchTerm) ||
-      receipt.amount.toString().includes(searchTerm)
+      receipt.amountPaid.toString().includes(searchTerm) ||
+      receipt.volumePurchased.toString().includes(searchTerm) ||
+      receipt.advertisedPrice.toString().includes(searchTerm)
 
     const matchesCar = selectedCarId ? receipt.carId === selectedCarId : true
 
     return matchesSearch && matchesCar
   })
 
-  const totalAmount = filteredReceipts.reduce((sum, receipt) => sum + receipt.amount, 0)
+  const totalAmount = filteredReceipts.reduce((sum, receipt) => sum + receipt.amountPaid, 0)
 
   const handleDelete = (id: string) => {
     if (confirm("Are you sure you want to delete this receipt?")) {
@@ -69,11 +75,29 @@ export default function AccountSheetPage() {
     }
   }
 
+  const handleEdit = (receipt: FuelReceipt) => {
+    setReceiptOnFocus(receipt);
+    setShowForm(true);
+  }
+
+  const handleExitForm = () => {
+    setShowForm(false);
+  };
+
+  const handleFormSuccess = () => {
+    setShowForm(false);
+    queryClient.invalidateQueries({ queryKey: ["fuel-receipts"] })
+    toast({
+      title: "Receipt saved",
+      description: "Your fuel receipt has been saved successfully.",
+    })
+  };
+
   const exportToCSV = () => {
-    const headers = ["Date", "Vendor", "Amount", "Odometer"]
+    const headers = ["Date", /*"Vendor",*/ "Amount Paid", "Odometer"]
     const csvContent = [
       headers.join(","),
-      ...filteredReceipts.map((receipt) => [receipt.date, receipt.vendor, receipt.amount, receipt.odometer].join(",")),
+      ...filteredReceipts.map((receipt) => [receipt.date, /*receipt.vendor,*/ receipt.amountPaid, receipt.volumePurchased, receipt.advertisedPrice, receipt.odometer].join(",")),
     ].join("\n")
 
     const blob = new Blob([csvContent], { type: "text/csv" })
@@ -133,7 +157,13 @@ export default function AccountSheetPage() {
           </div>
         </div>
 
-        <Card>
+        {showForm ? (
+          <ReceiptForm
+            initialData={receiptOnFocus}
+            onSuccess={handleFormSuccess}
+            onCancel={handleExitForm}
+          />
+        ) : (<Card>
           <CardHeader>
             <div className="flex justify-between items-center">
               <div>
@@ -166,8 +196,10 @@ export default function AccountSheetPage() {
               <TableHeader>
                 <TableRow>
                   <TableHead>Date</TableHead>
-                  <TableHead>Vendor</TableHead>
-                  <TableHead className="text-right">Amount</TableHead>
+                  {/* <TableHead>Vendor</TableHead> */}
+                  <TableHead className="text-right">Amount Paid</TableHead>
+                  <TableHead className="text-right">Volume Purchased</TableHead>
+                  <TableHead className="text-right">Advertised Price</TableHead>
                   <TableHead className="text-right">Odometer</TableHead>
                   <TableHead>Car</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
@@ -188,11 +220,13 @@ export default function AccountSheetPage() {
                     .map((receipt) => (
                       <TableRow key={receipt.id}>
                         <TableCell>{new Date(receipt.date).toLocaleDateString()}</TableCell>
-                        <TableCell>
+                        {/* <TableCell>
                           <Badge variant="secondary">{receipt.vendor}</Badge>
-                        </TableCell>
-                        <TableCell className="text-right font-medium">${receipt.amount.toFixed(2)}</TableCell>
-                        <TableCell className="text-right">{receipt.odometer.toLocaleString()} km</TableCell>
+                        </TableCell> */}
+                        <TableCell className="text-right font-medium">${receipt.amountPaid.toFixed(2)}</TableCell>
+                        <TableCell className="text-right">{receipt.volumePurchased.toFixed(2)} L</TableCell>
+                        <TableCell className="text-right">${receipt.advertisedPrice.toFixed(3)}/L</TableCell>
+                        <TableCell className="text-right">{receipt.odometer.toLocaleString()}km</TableCell>
                         <TableCell>
                           {(() => {
                             const car = cars.find((c) => c.id === receipt.carId)
@@ -216,7 +250,7 @@ export default function AccountSheetPage() {
                               </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
-                              <DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => handleEdit(receipt)}>
                                 <Edit className="mr-2 h-4 w-4" />
                                 Edit
                               </DropdownMenuItem>
@@ -233,7 +267,7 @@ export default function AccountSheetPage() {
               </TableBody>
             </Table>
           </CardContent>
-        </Card>
+        </Card>)}
       </div>
     </AuthenticatedLayout>
   )

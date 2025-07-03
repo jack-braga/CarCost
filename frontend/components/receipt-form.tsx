@@ -11,26 +11,29 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Loader2, Save, X, ImageIcon } from "lucide-react"
 import { api } from "@/lib/api"
-import type { OCRResult } from "@/lib/types"
+import type { FuelReceipt, OCRResult } from "@/lib/types"
 import { useToast } from "@/hooks/use-toast"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
 interface ReceiptFormProps {
-  initialData?: OCRResult | null
+  initialData?: OCRResult | FuelReceipt | null
   onSuccess: () => void
   onCancel: () => void
   imagePreview?: string | null
 }
 
 export function ReceiptForm({ initialData, onSuccess, onCancel, imagePreview }: ReceiptFormProps) {
+  const isUpdating = !!(initialData && 'id' in initialData); // FIXME: workaround solution to distinguish between a OCRResult vs. FuelReceipt being made the initialData
   const [formData, setFormData] = useState({
     date: initialData?.date || new Date().toISOString().split("T")[0],
-    amount: initialData?.amount?.toString() || "",
-    vendor: initialData?.vendor || "",
+    amountPaid: initialData?.amountPaid?.toString() || "",
+    volumePurchased: initialData?.volumePurchased?.toString() || "",
+    advertisedPrice: initialData?.advertisedPrice?.toString() || "",
+    // vendor: initialData?.vendor || "",
     odometer: initialData?.odometer?.toString() || "",
   })
 
-  const [selectedCarId, setSelectedCarId] = useState<string>("")
+  const [selectedCarId, setSelectedCarId] = useState<string>(isUpdating ? initialData.carId : "")
 
   // Fetch user's cars
   const { data: cars = [] } = useQuery({
@@ -62,10 +65,25 @@ export function ReceiptForm({ initialData, onSuccess, onCancel, imagePreview }: 
     },
   })
 
+  const updateMutation = useMutation({
+    mutationFn: ({ id, updates }: { id: string; updates: Partial<FuelReceipt> }) =>
+      api.updateFuelReceipt(id, updates),
+    onSuccess: () => {
+      onSuccess()
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Edit failed",
+        description: error.message || "Failed to edit receipt. Please try again.",
+        variant: "destructive",
+      })
+    },
+  })
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
 
-    if (!formData.date || !formData.amount || !formData.vendor || !formData.odometer) {
+    if (!formData.date || !formData.amountPaid || !formData.volumePurchased || !formData.advertisedPrice || !formData.odometer) {
       toast({
         title: "Missing fields",
         description: "Please fill in all required fields.",
@@ -83,13 +101,33 @@ export function ReceiptForm({ initialData, onSuccess, onCancel, imagePreview }: 
       return
     }
 
-    const amount = Number.parseFloat(formData.amount)
+    const amountPaid = Number.parseFloat(formData.amountPaid)
+    const volumePurchased = Number.parseFloat(formData.volumePurchased)
+    const advertisedPrice = Number.parseFloat(formData.advertisedPrice)
     const odometer = Number.parseInt(formData.odometer)
 
-    if (isNaN(amount) || amount <= 0) {
+    if (isNaN(amountPaid) || amountPaid <= 0) {
       toast({
-        title: "Invalid amount",
-        description: "Please enter a valid amount greater than 0.",
+        title: "Invalid amount paid",
+        description: "Please enter a valid amount paid greater than 0.",
+        variant: "destructive",
+      })
+      return
+    }
+
+    if (isNaN(volumePurchased) || volumePurchased <= 0) {
+      toast({
+        title: "Invalid volume purchased",
+        description: "Please enter a valid volume purchased greater than 0.",
+        variant: "destructive",
+      })
+      return
+    }
+
+    if (isNaN(advertisedPrice) || advertisedPrice <= 0) {
+      toast({
+        title: "Invalid advertised price",
+        description: "Please enter a valid advertised price greater than 0.",
         variant: "destructive",
       })
       return
@@ -104,18 +142,65 @@ export function ReceiptForm({ initialData, onSuccess, onCancel, imagePreview }: 
       return
     }
 
-    saveMutation.mutate({
-      date: formData.date,
-      amount,
-      vendor: formData.vendor.trim(),
-      odometer,
-      carId: selectedCarId,
-    })
+    if (isUpdating) {
+      const updates: Partial<FuelReceipt> = {};
+      if (!initialData || initialData.date === undefined || formData.date !== initialData.date) {
+        updates.date = formData.date;
+      }
+      if (!initialData || initialData.amountPaid === undefined || amountPaid !== initialData.amountPaid) {
+        updates.amountPaid = amountPaid;
+      }
+      if (!initialData || initialData.volumePurchased === undefined || volumePurchased !== initialData.volumePurchased) {
+        updates.volumePurchased = volumePurchased;
+      }
+      if (!initialData || initialData.advertisedPrice === undefined || advertisedPrice !== initialData.advertisedPrice) {
+        updates.advertisedPrice = advertisedPrice;
+      }
+      if (!initialData || initialData.odometer === undefined || odometer !== initialData.odometer) {
+        updates.odometer = odometer;
+      }
+      if (!initialData || initialData.odometer === undefined || odometer !== initialData.odometer) {
+        updates.odometer = odometer;
+      }
+      if (!initialData || initialData.carId === undefined || selectedCarId !== initialData.carId) {
+        updates.carId = selectedCarId;
+      }
+
+      if (Object.keys(updates).length === 0) {
+        toast({
+          title: "No changes",
+          description: "No changes were made to your receipt.",
+        })
+        return
+      }
+
+      updateMutation.mutate({
+        id: initialData.id,
+        updates: updates
+      })
+    } else {
+      saveMutation.mutate({
+        date: formData.date,
+        amountPaid,
+        volumePurchased,
+        advertisedPrice,
+        // vendor: formData.vendor.trim(),
+        odometer,
+        carId: selectedCarId,
+      })
+    }
   }
 
   const handleInputChange = (field: string, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }))
   }
+
+  const handleRoundOnBlur = (field: string, value: string, decimalPlaces: number = 2) => {
+    const floatValue = parseFloat(value);
+    if (!isNaN(floatValue)) {
+      handleInputChange(field, floatValue.toFixed(decimalPlaces));
+    }
+  };
 
   return (
     <div className="grid gap-6 md:grid-cols-2">
@@ -139,10 +224,12 @@ export function ReceiptForm({ initialData, onSuccess, onCancel, imagePreview }: 
 
       <Card className={imagePreview ? "" : "md:col-span-2"}>
         <CardHeader>
-          <CardTitle>Receipt Details</CardTitle>
+          <CardTitle>{(isUpdating && "Edit ") + "Receipt Details"}</CardTitle>
           <CardDescription>
             {initialData
-              ? `Review and adjust the extracted information (Confidence: ${Math.round((initialData.confidence || 0) * 100)}%)`
+              ? isUpdating
+                ? "Edit your fuel receipt details"
+                : `Review and adjust the extracted information (Confidence: ${Math.round((initialData.confidence || 0) * 100)}%)`
               : "Enter your fuel receipt details manually"}
           </CardDescription>
         </CardHeader>
@@ -180,20 +267,51 @@ export function ReceiptForm({ initialData, onSuccess, onCancel, imagePreview }: 
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="amount">Amount ($) *</Label>
+                <Label htmlFor="amountPaid">Amount Paid ($) *</Label>
                 <Input
-                  id="amount"
+                  id="amountPaid"
                   type="number"
                   step="0.01"
                   min="0"
                   placeholder="0.00"
-                  value={formData.amount}
-                  onChange={(e) => handleInputChange("amount", e.target.value)}
+                  value={formData.amountPaid}
+                  onChange={(e) => handleInputChange("amountPaid", e.target.value)}
+                  onBlur={(e) => handleRoundOnBlur("amountPaid", e.target.value)}
                   required
                 />
               </div>
 
               <div className="space-y-2">
+                <Label htmlFor="volumePurchased">Volume Purchased (L) *</Label>
+                <Input
+                  id="volumePurchased"
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  placeholder="0.00"
+                  value={formData.volumePurchased}
+                  onChange={(e) => handleInputChange("volumePurchased", e.target.value)}
+                  onBlur={(e) => handleRoundOnBlur("volumePurchased", e.target.value)}
+                  required
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="advertisedPrice">Advertised Price ($/L) *</Label>
+                <Input
+                  id="advertisedPrice"
+                  type="number"
+                  step="0.001"
+                  min="0"
+                  placeholder="0.000"
+                  value={formData.advertisedPrice}
+                  onChange={(e) => handleInputChange("advertisedPrice", e.target.value)}
+                  onBlur={(e) => handleRoundOnBlur("advertisedPrice", e.target.value, 3)}
+                  required
+                />
+              </div>
+
+              {/* <div className="space-y-2">
                 <Label htmlFor="vendor">Vendor *</Label>
                 <Input
                   id="vendor"
@@ -203,10 +321,10 @@ export function ReceiptForm({ initialData, onSuccess, onCancel, imagePreview }: 
                   onChange={(e) => handleInputChange("vendor", e.target.value)}
                   required
                 />
-              </div>
+              </div> */}
 
               <div className="space-y-2">
-                <Label htmlFor="odometer">Odometer Reading *</Label>
+                <Label htmlFor="odometer">Odometer Reading (km)</Label>
                 <Input
                   id="odometer"
                   type="number"
@@ -214,12 +332,13 @@ export function ReceiptForm({ initialData, onSuccess, onCancel, imagePreview }: 
                   placeholder="e.g., 45230"
                   value={formData.odometer}
                   onChange={(e) => handleInputChange("odometer", e.target.value)}
+                  onBlur={(e) => handleRoundOnBlur("odometer", e.target.value)}
                   required
                 />
               </div>
             </div>
 
-            {initialData?.rawText && (
+            {!isUpdating && initialData?.rawText && (
               <div className="space-y-2">
                 <Label htmlFor="rawText">Raw OCR Text (for reference)</Label>
                 <Textarea id="rawText" value={initialData.rawText} readOnly className="text-xs bg-muted" rows={3} />
@@ -227,21 +346,37 @@ export function ReceiptForm({ initialData, onSuccess, onCancel, imagePreview }: 
             )}
 
             <div className="flex gap-2 pt-4">
-              <Button type="submit" disabled={saveMutation.isPending} className="flex-1">
-                {saveMutation.isPending ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Saving...
-                  </>
-                ) : (
-                  <>
-                    <Save className="mr-2 h-4 w-4" />
-                    Save Receipt
-                  </>
-                )}
+              <Button type="submit" disabled={isUpdating ? updateMutation.isPending : saveMutation.isPending} className="flex-1">
+                {isUpdating ?
+                  (
+                    updateMutation.isPending ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Editing...
+                      </>
+                    ) : (
+                      <>
+                        <Save className="mr-2 h-4 w-4" />
+                        Edit Receipt
+                      </>
+                    )
+                  ) : (
+                    saveMutation.isPending ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Saving...
+                      </>
+                    ) : (
+                      <>
+                        <Save className="mr-2 h-4 w-4" />
+                        Save Receipt
+                      </>
+                    )
+                  )
+                }
               </Button>
 
-              <Button type="button" variant="outline" onClick={onCancel} disabled={saveMutation.isPending}>
+              <Button type="button" variant="outline" onClick={onCancel} disabled={isUpdating ? updateMutation.isPending : saveMutation.isPending}>
                 <X className="mr-2 h-4 w-4" />
                 Cancel
               </Button>

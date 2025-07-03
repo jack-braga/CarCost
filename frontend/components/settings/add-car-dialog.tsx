@@ -236,11 +236,12 @@ export function AddCarDialog({ open, onOpenChange, isFirstCar }: AddCarDialogPro
                 id="tankCapacity"
                 type="number"
                 min="1"
+                step="0.01"
                 max="200"
                 placeholder="50"
                 value={formData.tankCapacity || ""}
                 onChange={(e) =>
-                  handleInputChange("tankCapacity", e.target.value ? Number.parseInt(e.target.value) : undefined)
+                  handleInputChange("tankCapacity", e.target.value)
                 }
                 disabled={createCarMutation.isPending}
               />
