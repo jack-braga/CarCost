@@ -1,7 +1,7 @@
 # CarCost
 
 ## TODO:
-- Force Odometer to be higher than last receipt
+
 - OCR
 - LLM
 - Allow receipt images to be uploaded and saved

@@ -31,8 +31,13 @@ def add_fuel_receipt(new_fuel_receipt_details: request_schemas.CreateFuelReceipt
     return fuel_receipt_model
 
 @router.get("", response_model=List[response_schemas.FuelReceiptSchema])
-def get_all_fuel_receipts(current_user: User = Depends(deps.get_current_user), db: Session = Depends(deps.get_db)):
-    fuel_receipts_for_user = db.query(FuelReceipt).filter(FuelReceipt.user_id == current_user.id).order_by(desc(FuelReceipt.date)).all()
+def get_all_fuel_receipts(car_id: str | None = None, current_user: User = Depends(deps.get_current_user), db: Session = Depends(deps.get_db)):
+    query = db.query(FuelReceipt).filter(FuelReceipt.user_id == current_user.id)
+
+    if car_id:
+        query = query.filter(FuelReceipt.car_id == car_id)
+
+    fuel_receipts_for_user = query.order_by(desc(FuelReceipt.date)).all()
     return [response_schemas.FuelReceiptSchema.model_validate(fuel_receipt) for fuel_receipt in fuel_receipts_for_user]
 
 @router.delete("/{fuel_receipt_id}", status_code=status.HTTP_204_NO_CONTENT)

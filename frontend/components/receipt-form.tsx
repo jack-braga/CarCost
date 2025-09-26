@@ -34,6 +34,8 @@ export function ReceiptForm({ initialData, onSuccess, onCancel, imagePreview }: 
   })
 
   const [selectedCarId, setSelectedCarId] = useState<string>(isUpdating ? initialData.carId : "")
+  const [ minimumOdometer, setMinimumOdometer] = useState<number>(0);
+  const [ maximumOdometer, setMaximumOdometer] = useState<number | false>(false);
 
   // Fetch user's cars
   const { data: cars = [] } = useQuery({
@@ -48,6 +50,68 @@ export function ReceiptForm({ initialData, onSuccess, onCancel, imagePreview }: 
       setSelectedCarId(defaultCar.id)
     }
   }, [cars, selectedCarId])
+
+  const { data: receipts = [] } = useQuery({
+    queryKey: ["receipts", selectedCarId],
+    queryFn: () => api.getFuelReceipts(selectedCarId),
+    enabled: !!selectedCarId,
+  })
+
+
+  useEffect(() => {
+    if (receipts && receipts.length > 0) {
+      const currentDate = new Date(formData.date);
+
+      // Find the closest date before the current date
+      const pastReceipts = receipts.filter(receipt => new Date(receipt.date) < currentDate);
+      const closestPastDate = pastReceipts.reduce((acc: Date | null, receipt) => {
+        const receiptDate = new Date(receipt.date);
+        if (!acc) return receiptDate;
+        return receiptDate > acc ? receiptDate : acc;
+      }, null);
+
+      // Find the receipt with the highest odometer reading on the closest past date
+      let maxOdometerBefore = 0;
+      if (closestPastDate) {
+        const receiptsOnClosestPastDate = pastReceipts.filter(receipt => new Date(receipt.date).getTime() === closestPastDate.getTime());
+        maxOdometerBefore = receiptsOnClosestPastDate.reduce((acc, receipt) => {
+          return receipt.odometer > acc ? receipt.odometer : acc;
+        }, 0);
+      }
+
+      // Find the closest date after the current date
+      const futureReceipts = receipts.filter(receipt => new Date(receipt.date) > currentDate);
+      const closestFutureDate = futureReceipts.reduce((acc: Date | null, receipt) => {
+        const receiptDate = new Date(receipt.date);
+        if (!acc) return receiptDate;
+        return receiptDate < acc ? receiptDate : acc;
+      }, null);
+
+      // Find the receipt with the lowest odometer reading on the closest future date
+      let minOdometerAfter = Infinity;
+      if (closestFutureDate) {
+        const receiptsOnClosestFutureDate = futureReceipts.filter(receipt => new Date(receipt.date).getTime() === closestFutureDate.getTime());
+        minOdometerAfter = receiptsOnClosestFutureDate.reduce((acc, receipt) => {
+          return receipt.odometer < acc ? receipt.odometer : acc;
+        }, Infinity);
+      }
+
+      // Determine the minimum & maximum odometer readings based on the closest past and future dates
+      if (maxOdometerBefore > 0) {
+        setMinimumOdometer(maxOdometerBefore);
+      } else {
+        setMinimumOdometer(0);
+      }
+      if (minOdometerAfter !== Infinity && minOdometerAfter > maxOdometerBefore) {
+        setMaximumOdometer(minOdometerAfter);
+      } else {
+        setMaximumOdometer(false);
+      }
+    } else {
+      setMinimumOdometer(0);
+      setMaximumOdometer(false);
+    }
+  }, [receipts, formData.date]);
 
   const { toast } = useToast()
 
@@ -324,12 +388,13 @@ export function ReceiptForm({ initialData, onSuccess, onCancel, imagePreview }: 
               </div> */}
 
               <div className="space-y-2">
-                <Label htmlFor="odometer">Odometer Reading (km)</Label>
+                <Label htmlFor="odometer">Odometer Reading (km) *</Label>
                 <Input
                   id="odometer"
                   type="number"
-                  min="0"
-                  placeholder="e.g., 45230"
+                  min={minimumOdometer}
+                  max={maximumOdometer !== false ? maximumOdometer : undefined}
+                  placeholder={`Range: ${minimumOdometer}km - ${maximumOdometer !== false ? `${maximumOdometer}km` : "N/A"}`}
                   value={formData.odometer}
                   onChange={(e) => handleInputChange("odometer", e.target.value)}
                   onBlur={(e) => handleRoundOnBlur("odometer", e.target.value)}

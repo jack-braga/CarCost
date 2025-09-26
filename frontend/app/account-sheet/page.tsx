@@ -33,7 +33,7 @@ export default function AccountSheetPage() {
 
   const { data: receipts = [], isLoading } = useQuery({
     queryKey: ["fuel-receipts"],
-    queryFn: api.getFuelReceipts,
+    queryFn: () => api.getFuelReceipts(),
   })
 
   const deleteMutation = useMutation({

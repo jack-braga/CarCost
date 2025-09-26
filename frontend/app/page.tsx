@@ -30,7 +30,7 @@ export default function Dashboard() {
     isError,
   } = useQuery({
     queryKey: ["fuel-receipts", retryCount, selectedCarId],
-    queryFn: () => api.getFuelReceipts(selectedCarId),
+    queryFn: () => api.getFuelReceipts(selectedCarId ?? undefined),
     retry: 3,
     retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
   })

@@ -100,8 +100,8 @@ class ApiClient {
   }
 
   // Fuel receipts endpoints
-  async getFuelReceipts(): Promise<FuelReceipt[]> {
-    return this.request<FuelReceipt[]>("/api/fuel-receipts")
+  async getFuelReceipts(id?: string): Promise<FuelReceipt[]> {
+    return this.request<FuelReceipt[]>(`/api/fuel-receipts${id ? `?car_id=${id}` : ""}`)
   }
 
   async getFuelReceipt(id: string): Promise<FuelReceipt> {
@@ -197,7 +197,7 @@ const apiClient = new ApiClient(API_BASE_URL)
 // Export the API methods
 export const api = {
   // Get all fuel receipts
-  getFuelReceipts: () => apiClient.getFuelReceipts(),
+  getFuelReceipts: (id?: string) => apiClient.getFuelReceipts(id),
 
   // Get single fuel receipt
   getFuelReceipt: (id: string) => apiClient.getFuelReceipt(id),
