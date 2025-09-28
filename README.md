@@ -2,7 +2,7 @@
 
 ## TODO:
 
-- OCR
+- Create Training Data with Receipt maker (https://gemini.google.com/app/a286d4e6f4ec3cc2?hl=en-AU)
 - LLM
 - Allow receipt images to be uploaded and saved
 - Exact Fuel Type (E10 vs 98 vs 91 etc.)
