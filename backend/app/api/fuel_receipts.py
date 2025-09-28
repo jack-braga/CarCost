@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, status, HTTPException
+from fastapi import APIRouter, Depends, status, HTTPException, UploadFile, File
 from app.schemas import response_schemas, request_schemas
 from app.api import deps
 from app.models.car import Car
@@ -7,8 +7,82 @@ from app.models.user import User
 from sqlalchemy.orm import Session
 from typing import List
 from sqlalchemy import desc
+import easyocr
+import shutil
+import os
 
 router = APIRouter()
+reader = easyocr.Reader(['en'])
+
+def reconstruct_receipt_text(easyocr_results, y_tolerance=10):
+    """
+    Reconstructs receipt text preserving structure using bounding box coordinates.
+    
+    y_tolerance: Max vertical difference (pixels) considered for the same line.
+    """
+    
+    # Extract coordinates and text from the full EasyOCR result
+    data = []
+    for (bbox, text, confidence) in easyocr_results:
+        # Get the top-left corner (x1, y1)
+        x1 = bbox[0][0]
+        y1 = bbox[0][1]
+        data.append({'x': x1, 'y': y1, 'text': text})
+    
+    # Sort all items primarily by Y, then by X
+    data.sort(key=lambda item: (item['y'], item['x']))
+
+    structured_text_lines = []
+    current_line = []
+    
+    if not data:
+        return ""
+
+    # Start with the first item's Y-coordinate
+    current_y = data[0]['y']
+
+    for item in data:
+        # Check if the item is on a new line (y-coordinate change > tolerance)
+        if item['y'] > current_y + y_tolerance:
+            # New line detected:
+            # 1. Sort the previous line's elements by X
+            current_line.sort(key=lambda x: x['x'])
+            
+            # 2. Join words with a single space and add the completed line
+            line_text = " ".join([elem['text'] for elem in current_line])
+            structured_text_lines.append(line_text)
+            
+            # 3. Start a new line
+            current_line = []
+            current_y = item['y']
+            
+        current_line.append(item)
+
+    # Process the last line (if any)
+    if current_line:
+        current_line.sort(key=lambda x: x['x'])
+        line_text = " ".join([elem['text'] for elem in current_line])
+        structured_text_lines.append(line_text)
+
+    # Join all lines with a newline character
+    return "\n".join(structured_text_lines)
+
+@router.post("/upload")
+async def perform_ocr(file: UploadFile = File(...)):
+    # 1. Save the uploaded file temporarily
+    temp_path = f"temp_{file.filename}"
+    with open(temp_path, "wb") as buffer:
+        shutil.copyfileobj(file.file, buffer)
+    
+    # 2. Run EasyOCR - 'result' now contains text AND coordinates
+    result = reader.readtext(temp_path)
+    os.remove(temp_path)
+
+    # 3. Use the reconstruction function to format the text
+    extracted_text_structured = reconstruct_receipt_text(result)
+    
+    # 4. Return the single, structured text string
+    return {"text": extracted_text_structured}
 
 @router.post("", response_model=response_schemas.FuelReceiptSchema)
 def add_fuel_receipt(new_fuel_receipt_details: request_schemas.CreateFuelReceipt, current_user: User = Depends(deps.get_current_user), db: Session = Depends(deps.get_db)):

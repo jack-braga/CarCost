@@ -96,3 +96,10 @@ frontend/.vercel
 # typescript
 frontend/*.tsbuildinfo
 frontend/next-env.d.ts
+
+# =======================================================
+# Machine Learning specific ignores
+# =======================================================
+
+# dependencies
+machine_learning/ml_training/receipts

@@ -132,7 +132,7 @@ class ApiClient {
 
   // OCR endpoints
   async uploadReceiptForOCR(file: File): Promise<UploadResponse> {
-    return this.uploadFile<UploadResponse>("/api/ocr/process-receipt", file)
+    return this.uploadFile<UploadResponse>("/api/fuel-receipts/upload", file)
   }
 
   // Car endpoints
